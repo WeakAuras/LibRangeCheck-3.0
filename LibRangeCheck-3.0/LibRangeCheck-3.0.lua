@@ -1,7 +1,7 @@
 --[[
 Name: LibRangeCheck-3.0
-Author(s): mitch0, WoWUI Dev community
-Website: http://www.wowace.com/projects/librangecheck-2-0/
+Author(s): mitch0, WoWUIDev Community
+Website: https://www.curseforge.com/wow/addons/librangecheck-3-0
 Description: A range checking library based on interact distances and spell ranges
 Dependencies: LibStub
 License: MIT
