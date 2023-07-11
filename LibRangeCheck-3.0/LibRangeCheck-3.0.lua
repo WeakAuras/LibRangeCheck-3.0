@@ -215,7 +215,7 @@ tinsert(ResSpells.PALADIN, 7328)    -- Redemption (40 yards)
 
 -- Priests
 if isRetail then
-    tinsert(FriendSpells.PRIEST, 21562) -- Power Word: Fortitude (40 yards, level 6) [use first to fix kyrian boon/fae soulshape]
+    tinsert(FriendSpells.PRIEST, 21562) -- Power Word: Fortitude (40 yards, level 6) [use first to fix Kyrian boon/fae soulshape]
     tinsert(FriendSpells.PRIEST, 17)    -- Power Word: Shield (40 yards, level 4)
 else -- PWS is group only in classic, use lesser heal as main spell check
     tinsert(FriendSpells.PRIEST, 2050)  -- Lesser Heal (40 yards, level 1, rank 1)
@@ -237,7 +237,7 @@ tinsert(ResSpells.PRIEST, 2006)     -- Resurrection (40 yards, level 10)
 -- Rogues
 if isRetail then
     tinsert(FriendSpells.ROGUE, 36554)  -- Shadowstep (Assassination, Subtlety) (25 yards, level 18) -- works on friendly in retail
-    tinsert(FriendSpells.ROGUE, 921)    -- Pick Pocket (10 yards, level 24) -- this works for range, keep it in friendly aswell for retail but on classic this is melee range and will return min 0 range 0
+    tinsert(FriendSpells.ROGUE, 921)    -- Pick Pocket (10 yards, level 24) -- this works for range, keep it in friendly as well for retail but on classic this is melee range and will return min 0 range 0
 end
 
 tinsert(HarmSpells.ROGUE, 2764)     -- Throw (30 yards)
@@ -279,7 +279,7 @@ end
 
 -- Warlocks
 tinsert(FriendSpells.WARLOCK, 5697)     -- Unending Breath (30 yards)
-tinsert(FriendSpells.WARLOCK, 20707)    -- Soulstone (40 yards) ~ this can be precasted so leave it in friendly aswell as res
+tinsert(FriendSpells.WARLOCK, 20707)    -- Soulstone (40 yards) ~ this can be precasted so leave it in friendly as well as res
 
 if isRetail then
     tinsert(FriendSpells.WARLOCK, 132)  -- Detect Invisibility (30 yards, level 26)
@@ -755,7 +755,7 @@ local function getCachedRange(unit, noItems, maxCacheAge)
         return cacheItem.minRange, cacheItem.maxRange
     end
 
-    -- otherwise create a new or update the exisitng cache item
+    -- otherwise create a new or update the existing cache item
     local result = cacheItem or {}
     result.minRange, result.maxRange = getRange(unit, noItems)
     result.updateTime = currentTime
@@ -934,7 +934,7 @@ function lib:init(forced)
     if not minRangeCheck then -- fall back to interact distance checks
         if playerClass == "HUNTER" or playerRace == "Tauren" then
             -- for Hunters: use interact4 as it's safer
-            -- for Taurens: interact4 is actually closer than 25yd and interact3 is closer than 8yd, so we can't use that
+            -- for Tauren: interact4 is actually closer than 25yd and interact3 is closer than 8yd, so we can't use that
             minRangeCheck = checkers_Interact[4]
         else
             minRangeCheck = checkers_Interact[3]
