@@ -4,6 +4,7 @@
 ## Author: The WoWUIDev Community
 ## Version: @project-version@
 ## LoadOnDemand: 1
+## X-Curse-Project-ID: 887398
 ## X-Category: Library
 ## X-Credits: mitch0
 ## X-License: MIT
