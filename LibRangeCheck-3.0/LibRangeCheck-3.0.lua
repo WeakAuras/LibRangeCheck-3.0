@@ -744,7 +744,9 @@ local function getRangeWithCheckerList(unit, checkerList)
       hi = mid - 1
     end
   end
-  if lo > #checkerList then
+  if #checkerList == 0 then
+    return nil, nil
+  elseif lo > #checkerList then
     return 0, checkerList[#checkerList].range
   elseif lo <= 1 then
     return checkerList[1].range, nil
