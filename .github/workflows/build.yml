@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 200
+          fetch-depth: 0 # fetch all history for git describe to work
 
       # - name: Install and run Luacheck
       #   uses: nebularg/actions-luacheck@v1
