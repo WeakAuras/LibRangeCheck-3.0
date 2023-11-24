@@ -42,6 +42,7 @@ License: MIT
 local MAJOR_VERSION = "LibRangeCheck-3.0"
 local MINOR_VERSION = 7
 
+---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then
   return
