@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 7
+local MINOR_VERSION = 8
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -53,7 +53,7 @@ local isWrath = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
 
 local InCombatLockdownRestriction
 if isRetail then
-  InCombatLockdownRestriction = InCombatLockdown
+  InCombatLockdownRestriction = function(unit, canAttack) return InCombatLockdown() and not (canAttack or UnitCanAttack("player", unit)) end
 else
   InCombatLockdownRestriction = function() return false end
 end
@@ -547,7 +547,7 @@ local checkers_SpellWithMin = {} -- see getCheckerForSpellWithMinRange()
 local checkers_Item = setmetatable({}, {
   __index = function(t, item)
     local func = function(unit)
-      if InCombatLockdownRestriction() then
+      if InCombatLockdownRestriction(unit) then
         return nil
       else
         return IsItemInRange(item, unit) or nil
@@ -560,7 +560,7 @@ local checkers_Item = setmetatable({}, {
 local checkers_Interact = setmetatable({}, {
   __index = function(t, index)
     local func = function(unit)
-      if InCombatLockdownRestriction() then
+      if InCombatLockdownRestriction(unit) then
         return nil
       else
         return CheckInteractDistance(unit, index) and true or false
@@ -764,20 +764,20 @@ local function getRange(unit, noItems)
   local canAssist = UnitCanAssist("player", unit)
   if UnitIsDeadOrGhost(unit) then
     if canAssist then
-      return getRangeWithCheckerList(unit, InCombatLockdownRestriction() and lib.resRCInCombat or lib.resRC)
+      return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit, false) and lib.resRCInCombat or lib.resRC)
     else
-      return getRangeWithCheckerList(unit, InCombatLockdownRestriction() and lib.miscRCInCombat or lib.miscRC)
+      return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit) and lib.miscRCInCombat or lib.miscRC)
     end
   end
 
   if UnitCanAttack("player", unit) then
-    if InCombatLockdownRestriction() then
+    if InCombatLockdownRestriction(unit, true) then
       return getRangeWithCheckerList(unit, noItems and lib.harmNoItemsRCInCombat or lib.harmRCInCombat)
     else
       return getRangeWithCheckerList(unit, noItems and lib.harmNoItemsRC or lib.harmRC)
     end
   elseif UnitIsUnit("pet", unit) then
-    if InCombatLockdownRestriction() then
+    if InCombatLockdownRestriction(unit) then
       local minRange, maxRange = getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRCInCombat or lib.friendRCInCombat)
       if minRange or maxRange then
         return minRange, maxRange
@@ -793,13 +793,13 @@ local function getRange(unit, noItems)
       end
     end
   elseif canAssist then
-    if InCombatLockdownRestriction() then
+    if InCombatLockdownRestriction(unit, false) then
       return getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRCInCombat or lib.friendRCInCombat)
     else
       return getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRC or lib.friendRC)
     end
   else
-    return getRangeWithCheckerList(unit, InCombatLockdownRestriction() and lib.miscRC or lib.miscRCInCombat)
+    return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit) and lib.miscRC or lib.miscRCInCombat)
   end
 end
 
@@ -1608,7 +1608,7 @@ function lib:updateMeasurements()
       self.lastMeasurements[key] = curr
     end
   end
-  if not InCombatLockdownRestriction() then
+  if not InCombatLockdownRestriction(unit) then
     for i, v in pairs(DefaultInteractList) do
       local key = "interact: " .. i
       local last = self.lastMeasurements[key]
