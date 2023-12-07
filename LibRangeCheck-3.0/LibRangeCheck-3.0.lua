@@ -764,7 +764,7 @@ local function getRange(unit, noItems)
   local canAssist = UnitCanAssist("player", unit)
   if UnitIsDeadOrGhost(unit) then
     if canAssist then
-      return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit, false) and lib.resRCInCombat or lib.resRC)
+      return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit) and lib.resRCInCombat or lib.resRC)
     else
       return getRangeWithCheckerList(unit, InCombatLockdownRestriction(unit) and lib.miscRCInCombat or lib.miscRC)
     end
@@ -793,7 +793,7 @@ local function getRange(unit, noItems)
       end
     end
   elseif canAssist then
-    if InCombatLockdownRestriction(unit, false) then
+    if InCombatLockdownRestriction(unit) then
       return getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRCInCombat or lib.friendRCInCombat)
     else
       return getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRC or lib.friendRC)
