@@ -53,7 +53,7 @@ local isWrath = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
 
 local InCombatLockdownRestriction
 if isRetail then
-  InCombatLockdownRestriction = function(unit, canAttack) return InCombatLockdown() and not (canAttack or UnitCanAttack("player", unit)) end
+  InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
 else
   InCombatLockdownRestriction = function() return false end
 end
@@ -546,8 +546,8 @@ local checkers_Spell = setmetatable({}, {
 local checkers_SpellWithMin = {} -- see getCheckerForSpellWithMinRange()
 local checkers_Item = setmetatable({}, {
   __index = function(t, item)
-    local func = function(unit)
-      if InCombatLockdownRestriction(unit) then
+    local func = function(unit, skipInCombatCheck)
+      if not skipInCombatCheck and InCombatLockdownRestriction(unit) then
         return nil
       else
         return IsItemInRange(item, unit) or nil
@@ -559,8 +559,8 @@ local checkers_Item = setmetatable({}, {
 })
 local checkers_Interact = setmetatable({}, {
   __index = function(t, index)
-    local func = function(unit)
-      if InCombatLockdownRestriction(unit) then
+    local func = function(unit, skipInCombatCheck)
+      if not skipInCombatCheck and InCombatLockdownRestriction(unit) then
         return nil
       else
         return CheckInteractDistance(unit, index) and true or false
@@ -743,7 +743,7 @@ local function getRangeWithCheckerList(unit, checkerList)
   while lo <= hi do
     local mid = math_floor((lo + hi) / 2)
     local rc = checkerList[mid]
-    if rc.checker(unit) then
+    if rc.checker(unit, true) then
       lo = mid + 1
     else
       hi = mid - 1
@@ -771,11 +771,7 @@ local function getRange(unit, noItems)
   end
 
   if UnitCanAttack("player", unit) then
-    if InCombatLockdownRestriction(unit, true) then
-      return getRangeWithCheckerList(unit, noItems and lib.harmNoItemsRCInCombat or lib.harmRCInCombat)
-    else
-      return getRangeWithCheckerList(unit, noItems and lib.harmNoItemsRC or lib.harmRC)
-    end
+    return getRangeWithCheckerList(unit, noItems and lib.harmNoItemsRC or lib.harmRC)
   elseif UnitIsUnit("pet", unit) then
     if InCombatLockdownRestriction(unit) then
       local minRange, maxRange = getRangeWithCheckerList(unit, noItems and lib.friendNoItemsRCInCombat or lib.friendRCInCombat)
