@@ -289,26 +289,26 @@ if not isRetail then
 end
 
 -- Warlocks
+tinsert(FriendSpells.WARLOCK, 132) -- Detect Invisibility (30 yards, level 26)
 tinsert(FriendSpells.WARLOCK, 5697) -- Unending Breath (30 yards)
 tinsert(FriendSpells.WARLOCK, 20707) -- Soulstone (40 yards) ~ this can be precasted so leave it in friendly as well as res
 
 if isRetail then
-  tinsert(FriendSpells.WARLOCK, 132) -- Detect Invisibility (30 yards, level 26)
+  tinsert(HarmSpells.WARLOCK, 234153) -- Drain Life (40 yards, level 9)
+  tinsert(HarmSpells.WARLOCK, 198590) -- Drain Soul (40 yards, level 15)
+  tinsert(HarmSpells.WARLOCK, 232670) -- Shadow Bolt (40 yards)
+else
+  tinsert(HarmSpells.WARLOCK, 172) -- Corruption (30/33/36 yards, level 4, rank 1)
+  tinsert(HarmSpells.WARLOCK, 348) -- Immolate (30/33/36 yards, level 1, rank 1)
+  tinsert(HarmSpells.WARLOCK, 17877) -- Shadowburn (Destruction) (20/22/24 yards, rank 1)
+  tinsert(HarmSpells.WARLOCK, 18223) -- Curse of Exhaustion (Affliction) (30/33/36/35/38/42 yards)
+  tinsert(HarmSpells.WARLOCK, 689) -- Drain Life (Affliction) (20/22/24 yards, level 14, rank 1)
+  tinsert(HarmSpells.WARLOCK, 403677) -- Master Channeler (Affliction) (20/22/24 yards, level 14, rank 1)
 end
 
 tinsert(HarmSpells.WARLOCK, 5019) -- Shoot (30 yards)
-tinsert(HarmSpells.WARLOCK, 234153) -- Drain Life (40 yards, level 9)
-tinsert(HarmSpells.WARLOCK, 198590) -- Drain Soul (40 yards, level 15)
 tinsert(HarmSpells.WARLOCK, 686) -- Shadow Bolt (Demonology, Affliction) (40 yards)
-tinsert(HarmSpells.WARLOCK, 232670) -- Shadow Bolt (40 yards)
 tinsert(HarmSpells.WARLOCK, 5782) -- Fear (30 yards)
-
-if not isRetail then
-  tinsert(HarmSpells.WARLOCK, 172) -- Corruption (30 yards, level 4, rank 1)
-  tinsert(HarmSpells.WARLOCK, 348) -- Immolate (30 yards, level 1, rank 1)
-  tinsert(HarmSpells.WARLOCK, 17877) -- Shadowburn (Destruction) (20 yards)
-  tinsert(HarmSpells.WARLOCK, 18223) -- Curse of Exhaustion (Affliction) (30/33/36/35/38/42 yards)
-end
 
 tinsert(ResSpells.WARLOCK, 20707) -- Soulstone (40 yards)
 
