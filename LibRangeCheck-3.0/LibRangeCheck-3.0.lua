@@ -675,7 +675,7 @@ local function createCheckerList(spellList, itemList, interactList)
     for range, items in pairs(itemList) do
       for i = 1, #items do
         local item = items[i]
-        if GetItemInfo(item) then
+        if Item:CreateFromItemID(item):IsItemDataCached() and GetItemInfo(item) then
           addChecker(res, range, nil, checkers_Item[item], "item:" .. item)
           break
         end
@@ -1259,7 +1259,7 @@ function lib:processItemRequests(itemRequests)
       if not i then
         itemRequests[range] = nil
         break
-      elseif self.failedItemRequests[item] then
+      elseif Item:CreateFromItemID(item):IsItemEmpty() or self.failedItemRequests[item] then
         -- print("### processItemRequests: failed: " .. tostring(item))
         tremove(items, i)
       elseif pendingItemRequest[item] and GetTime() < itemRequestTimeoutAt[item] then
