@@ -524,8 +524,8 @@ end
 
 -- temporary stuff
 
-local pendingItemRequest
-local itemRequestTimeoutAt
+local pendingItemRequest = {}
+local itemRequestTimeoutAt = {}
 local foundNewItems
 local cacheAllItems
 local friendItemRequests
@@ -1238,8 +1238,9 @@ end
 
 function lib:GET_ITEM_INFO_RECEIVED(event, item, success)
   -- print("### GET_ITEM_INFO_RECEIVED: " .. tostring(item) .. ", " .. tostring(success))
-  if item == pendingItemRequest then
-    pendingItemRequest = nil
+  if pendingItemRequest[item] then
+    pendingItemRequest[item] = nil
+    itemRequestTimeoutAt[item] = nil
     if not success then
       self.failedItemRequests[item] = true
     end
@@ -1261,37 +1262,37 @@ function lib:processItemRequests(itemRequests)
       elseif self.failedItemRequests[item] then
         -- print("### processItemRequests: failed: " .. tostring(item))
         tremove(items, i)
-      elseif item == pendingItemRequest and GetTime() < itemRequestTimeoutAt then
+      elseif pendingItemRequest[item] and GetTime() < itemRequestTimeoutAt[item] then
         return true -- still waiting for server response
       elseif GetItemInfo(item) then
         -- print("### processItemRequests: found: " .. tostring(item))
-        if itemRequestTimeoutAt then
+        if itemRequestTimeoutAt[item] then
           -- print("### processItemRequests: new: " .. tostring(item))
           foundNewItems = true
-          itemRequestTimeoutAt = nil
-          pendingItemRequest = nil
+          itemRequestTimeoutAt[item] = nil
+          pendingItemRequest[item] = nil
         end
         if not cacheAllItems then
           itemRequests[range] = nil
           break
         end
         tremove(items, i)
-      elseif not itemRequestTimeoutAt then
+      elseif not itemRequestTimeoutAt[item] then
         -- print("### processItemRequests: waiting: " .. tostring(item))
-        itemRequestTimeoutAt = GetTime() + ItemRequestTimeout
-        pendingItemRequest = item
+        itemRequestTimeoutAt[item] = GetTime() + ItemRequestTimeout
+        pendingItemRequest[item] = true
         if not self.frame:IsEventRegistered("GET_ITEM_INFO_RECEIVED") then
           self.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         end
         return true
-      elseif GetTime() >= itemRequestTimeoutAt then
+      elseif GetTime() >= itemRequestTimeoutAt[item] then
         -- print("### processItemRequests: timeout: " .. tostring(item))
         if cacheAllItems then
           print(MAJOR_VERSION .. ": timeout for item: " .. tostring(item))
         end
         self.failedItemRequests[item] = true
-        itemRequestTimeoutAt = nil
-        pendingItemRequest = nil
+        itemRequestTimeoutAt[item] = nil
+        pendingItemRequest[item] = nil
         tremove(items, i)
       else
         return true -- still waiting for server response
