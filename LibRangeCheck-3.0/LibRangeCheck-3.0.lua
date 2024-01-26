@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 10
+local MINOR_VERSION = 11
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -1266,12 +1266,9 @@ function lib:processItemRequests(itemRequests)
         return true -- still waiting for server response
       elseif GetItemInfo(item) then
         -- print("### processItemRequests: found: " .. tostring(item))
-        if itemRequestTimeoutAt[item] then
-          -- print("### processItemRequests: new: " .. tostring(item))
-          foundNewItems = true
-          itemRequestTimeoutAt[item] = nil
-          pendingItemRequest[item] = nil
-        end
+        foundNewItems = true
+        itemRequestTimeoutAt[item] = nil
+        pendingItemRequest[item] = nil
         if not cacheAllItems then
           itemRequests[range] = nil
           break
