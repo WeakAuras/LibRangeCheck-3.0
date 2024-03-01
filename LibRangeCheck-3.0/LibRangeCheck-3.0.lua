@@ -596,7 +596,7 @@ local checkers_SpellWithMin = setmetatable({}, {
       local func = function(unit, skipInCombatCheck)
         if isInteract then
           local interactCheck = checkers_Interact[id]
-          if interactCheck(unit, skipInCombatCheck) then
+          if interactCheck and interactCheck(unit, skipInCombatCheck) then
             return true
           end
         else
