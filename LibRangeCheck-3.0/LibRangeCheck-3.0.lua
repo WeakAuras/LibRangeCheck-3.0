@@ -606,7 +606,7 @@ local checkers_SpellWithMin = setmetatable({}, {
           elseif t.MinInteractList then -- fallback to try interact when a spell failed
             for index in pairs(t.MinInteractList) do
               local interactCheck = checkers_Interact[index]
-              if interactCheck(unit, skipInCombatCheck) then
+              if interactCheck and interactCheck(unit, skipInCombatCheck) then
                 return true
               end
             end
