@@ -49,14 +49,7 @@ if not lib then
 end
 
 local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
-local isWrath = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
-local isEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local InCombatLockdownRestriction
-if isRetail or isEra then
-  InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
-else
-  InCombatLockdownRestriction = function() return false end
-end
+local InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
 
 local _G = _G
 local next = next
