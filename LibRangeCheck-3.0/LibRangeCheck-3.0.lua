@@ -49,6 +49,9 @@ if not lib then
 end
 
 local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local isEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+
 local InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
 
 local _G = _G
@@ -1674,11 +1677,11 @@ function lib:activate()
     frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     frame:RegisterEvent("SPELLS_CHANGED")
 
-    if isEra or isWrath then
+    if isEra or isCata then
       frame:RegisterEvent("CVAR_UPDATE")
     end
 
-    if isRetail or isWrath then
+    if isRetail or isCata then
       frame:RegisterEvent("PLAYER_TALENT_UPDATE")
     end
 
