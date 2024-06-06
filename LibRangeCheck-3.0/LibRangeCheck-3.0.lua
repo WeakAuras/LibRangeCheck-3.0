@@ -77,7 +77,6 @@ local UnitGUID = UnitGUID
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local CheckInteractDistance = CheckInteractDistance
 local IsSpellInRange = IsSpellInRange
-local IsItemInRange = IsItemInRange
 local UnitClass = UnitClass
 local UnitRace = UnitRace
 local GetInventoryItemLink = GetInventoryItemLink
@@ -569,7 +568,7 @@ local checkers_Item = setmetatable({}, {
       if not skipInCombatCheck and InCombatLockdownRestriction(unit) then
         return nil
       else
-        return IsItemInRange(item, unit) or nil
+        return C_Item.IsItemInRange(item, unit) or nil
       end
     end
     t[item] = func
