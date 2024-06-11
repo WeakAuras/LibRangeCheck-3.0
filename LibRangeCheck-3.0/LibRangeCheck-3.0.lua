@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 16
+local MINOR_VERSION = 17
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -67,7 +67,7 @@ local tremove = tremove
 local tostring = tostring
 local setmetatable = setmetatable
 local BOOKTYPE_SPELL = BOOKTYPE_SPELL or Enum.SpellBookSpellBank.Player
-local GetSpellBookItemName = GetSpellBookItemName
+local GetSpellBookItemName = GetSpellBookItemName or C_SpellBook.GetSpellBookItemName
 local C_Item = C_Item
 local UnitCanAttack = UnitCanAttack
 local UnitCanAssist = UnitCanAssist
@@ -76,7 +76,7 @@ local UnitIsUnit = UnitIsUnit
 local UnitGUID = UnitGUID
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local CheckInteractDistance = CheckInteractDistance
-local IsSpellInRange = IsSpellInRange
+local IsSpellInRange = IsSpellInRange or C_Spell.IsSpellInRange
 local UnitClass = UnitClass
 local UnitRace = UnitRace
 local GetInventoryItemLink = GetInventoryItemLink
