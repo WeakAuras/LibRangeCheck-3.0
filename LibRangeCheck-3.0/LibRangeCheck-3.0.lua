@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 18
+local MINOR_VERSION = 19
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -76,8 +76,17 @@ local UnitIsUnit = UnitIsUnit
 local UnitGUID = UnitGUID
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local CheckInteractDistance = CheckInteractDistance
-local IsSpellInRange = IsSpellInRange or function(id)
-  local result = C_Spell.IsSpellInRange(id)
+local IsSpellInRange = _G.IsSpellInRange or function(id, unit)
+  local result = C_Spell.IsSpellInRange(id, unit)
+  if result == true then
+    return 1
+  elseif result == false then
+    return 0
+  end
+  return nil
+end
+local IsSpellBookItemInRange = _G.IsSpellInRange or function(index, spellBank, unit)
+  local result = C_SpellBook.IsSpellBookItemInRange(index, spellBank, unit)
   if result == true then
     return 1
   elseif result == false then
@@ -561,7 +570,7 @@ local lastUpdate = 0
 local checkers_Spell = setmetatable({}, {
   __index = function(t, spellIdx)
     local func = function(unit)
-      if IsSpellInRange(spellIdx, BOOKTYPE_SPELL, unit) == 1 then
+      if IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) == 1 then
         return true
       end
     end
@@ -673,7 +682,7 @@ local function getCheckerForSpellWithMinRange(spellIdx, minRange, range, spellLi
   local minRangeChecker = findMinRangeChecker(minRange, range, spellList, interactLists)
   if minRangeChecker then
     checker = function(unit)
-      if IsSpellInRange(spellIdx, BOOKTYPE_SPELL, unit) == 1 then
+      if IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit) == 1 then
         return true
       elseif minRangeChecker(unit) then
         return true, true
@@ -1522,7 +1531,7 @@ function lib:checkSpells(spellList, verbose, color)
             .. "yd: |cffeda500not in spellbook|r"
         )
       else
-        local res = IsSpellInRange(spellIdx, BOOKTYPE_SPELL, "target")
+        local res = IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, "target")
         if res == nil or verbose then
           if res == nil then
             res = "|cffed0000nil|r"
@@ -1612,7 +1621,7 @@ function lib:updateMeasurements()
   for name, id in pairs(self.spellsToMeasure) do
     local key = "spell: " .. name
     local last = self.lastMeasurements[key]
-    local curr = (IsSpellInRange(id, BOOKTYPE_SPELL, unit) == 1) and true or false
+    local curr = (IsSpellBookItemInRange(id, BOOKTYPE_SPELL, unit) == 1) and true or false
     if last == nil or last ~= curr then
       if not t then
         t = {}
