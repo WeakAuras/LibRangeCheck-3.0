@@ -76,21 +76,8 @@ local UnitIsUnit = UnitIsUnit
 local UnitGUID = UnitGUID
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local CheckInteractDistance = CheckInteractDistance
-local IsSpellInRange = _G.IsSpellInRange or function(id, unit)
-  local result = C_Spell.IsSpellInRange(id, unit)
-  if result == true then
-    return 1
-  elseif result == false then
-    return 0
-  end
-  return nil
-end
 local IsSpellBookItemInRange = _G.IsSpellInRange or function(index, spellBank, unit)
-  -- Deprecated_11_0_0.lua set BOOKTYPE_SPELL to "spell" but doesn't provide a compatibility wrapper for IsSpellBookItemInRange
-  if type(spellBank) == "string" then
-    spellBank = (spellBank == "spell") and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet;
-  end
-  local result = C_SpellBook.IsSpellBookItemInRange(index, spellBank, unit)
+  local result = C_Spell.IsSpellInRange(index, unit)
   if result == true then
     return 1
   elseif result == false then
@@ -103,9 +90,9 @@ local GetSpellBookItemInfo = _G.GetSpellBookItemInfo or function(index, spellBan
     spellBank = (spellBank == "spell") and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet;
   end
   local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-  --current spec, active spell and learned ("Spell", not "FutureSpell"). All other spells are not checked by `C_SpellBook.IsSpellBookItemInRange`...
-  if info and not info.isOffSpec and not info.isPassive and info.itemType == Enum.SpellBookItemType.Spell then
-    return "SPELL"
+  -- we are looking for "Spell" and "FutureSpell", but not passives here
+  if info and not info.isPassive and (info.itemType == Enum.SpellBookItemType.Spell or info.itemType == Enum.SpellBookItemType.FutureSpell) then
+    return info.itemType, info.spellID
   end
 end
 local UnitClass = UnitClass
@@ -656,9 +643,11 @@ local function findSpellIdx(spellName)
   for i = 1, getNumSpells() do
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
-      local info = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
-      if info == "SPELL" or info == "FUTURESPELL"  then -- "FUTURESPELL" would be returned by classic API, not by retail fallback and can be checked
+      local spellType, spellID = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+      if spellType == "SPELL" or spellType == "FUTURESPELL"  then -- classic/era
         return i
+      elseif Enum.SpellBookItemType and (spellType == Enum.SpellBookItemType.Spell or spellType == Enum.SpellBookItemType.FutureSpell) then -- retail
+        return spellID
       end
     end
   end
@@ -681,7 +670,7 @@ local function findMinRangeChecker(origMinRange, origRange, spellList, interactL
     local sid = spellList[i]
     local name, minRange, range, spellIdx = getSpellData(sid)
     if range and spellIdx and origMinRange <= range and range <= origRange and minRange == 0 then
-      return checkers_Spell[findSpellIdx(name)]
+      return checkers_Spell[spellIdx]
     end
   end
   for index, range in pairs(interactLists) do
