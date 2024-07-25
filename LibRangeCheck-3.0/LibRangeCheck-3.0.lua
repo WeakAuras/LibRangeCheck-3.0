@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 20
+local MINOR_VERSION = 21
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -97,6 +97,16 @@ local IsSpellBookItemInRange = _G.IsSpellInRange or function(index, spellBank, u
     return 0
   end
   return nil
+end
+local GetSpellBookItemInfo = _G.GetSpellBookItemInfo or function(index, spellBank)
+  if type(spellBank) == "string" then
+    spellBank = (spellBank == "spell") and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet;
+  end
+  local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
+  --current spec, active spell and learned ("Spell", not "FutureSpell"). All other spells are not checked by `C_SpellBook.IsSpellBookItemInRange`...
+  if info and not info.isOffSpec and not info.isPassive and info.itemType == Enum.SpellBookItemType.Spell then
+    return "SPELL"
+  end
 end
 local UnitClass = UnitClass
 local UnitRace = UnitRace
@@ -168,7 +178,7 @@ for _, n in ipairs({ "EVOKER", "DEATHKNIGHT", "DEMONHUNTER", "DRUID", "HUNTER", 
 end
 
 -- Evoker
-tinsert(HarmSpells.EVOKER, 369819) -- Disintegrate (25 yards)
+tinsert(HarmSpells.EVOKER, 362969) -- Azure Strike (25 yards)
 
 tinsert(FriendSpells.EVOKER, 361469) -- Living Flame (25 yards)
 tinsert(FriendSpells.EVOKER, 360823) -- Naturalize (Preservation) (30 yards)
@@ -646,7 +656,10 @@ local function findSpellIdx(spellName)
   for i = 1, getNumSpells() do
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
-      return i
+      local info = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+      if info == "SPELL" or info == "FUTURESPELL"  then -- "FUTURESPELL" would be returned by classic API, not by retail fallback and can be checked
+        return i
+      end
     end
   end
   return nil
