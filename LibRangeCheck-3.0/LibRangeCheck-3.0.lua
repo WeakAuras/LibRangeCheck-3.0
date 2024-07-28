@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 21
+local MINOR_VERSION = 22
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -632,6 +632,9 @@ end
 
 local function getNumSpells()
   local _, _, offset, numSpells = GetSpellTabInfo(GetNumSpellTabs())
+  if not offset or not numSpells then
+    return 0
+  end
   return offset + numSpells
 end
 
