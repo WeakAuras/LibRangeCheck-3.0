@@ -654,10 +654,10 @@ local function findSpellIdx(spellName)
   for i = 1, getNumSpells() do
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
-      local spellType, spellID = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+      local spellType, spellID, spellInfo = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
       if spellType == "SPELL" then -- classic/era
         return i
-      elseif Enum.SpellBookItemType and spellType == Enum.SpellBookItemType.Spell and (info and not info.isOffSpec or true) then -- retail
+      elseif Enum.SpellBookItemType and spellType == Enum.SpellBookItemType.Spell and (spellInfo and not spellInfo.isOffSpec or true) then -- retail
         return spellID
       end
     end
