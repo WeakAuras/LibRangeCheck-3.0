@@ -655,9 +655,9 @@ local function findSpellIdx(spellName)
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
       local spellType, spellID = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
-      if spellType == "SPELL" or spellType == "FUTURESPELL"  then -- classic/era
+      if spellType == "SPELL" then -- classic/era
         return i
-      elseif Enum.SpellBookItemType and (spellType == Enum.SpellBookItemType.Spell or spellType == Enum.SpellBookItemType.FutureSpell) then -- retail
+      elseif Enum.SpellBookItemType and spellType == Enum.SpellBookItemType.Spell then -- retail
         return spellID
       end
     end
