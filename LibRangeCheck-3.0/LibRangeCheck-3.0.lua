@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 23
+local MINOR_VERSION = 24
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -90,8 +90,8 @@ local GetSpellBookItemInfo = _G.GetSpellBookItemInfo or function(index, spellBan
     spellBank = (spellBank == "spell") and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet;
   end
   local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-  -- we are looking for "Spell" and "FutureSpell", but not passives here
-  if info and not info.isPassive and (info.itemType == Enum.SpellBookItemType.Spell or info.itemType == Enum.SpellBookItemType.FutureSpell) then
+  -- we are looking for "Spell" here, as "FutureSpell" and passives are not working with C_Spell.IsSpellInRange
+  if info and not info.isPassive and info.itemType == Enum.SpellBookItemType.Spell then
     return info.itemType, info.spellID
   end
 end
@@ -655,9 +655,9 @@ local function findSpellIdx(spellName)
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
       local spellType, spellID = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
-      if spellType == "SPELL" or spellType == "FUTURESPELL"  then -- classic/era
+      if spellType == "SPELL" then -- classic/era
         return i
-      elseif Enum.SpellBookItemType and (spellType == Enum.SpellBookItemType.Spell or spellType == Enum.SpellBookItemType.FutureSpell) then -- retail
+      elseif Enum.SpellBookItemType and spellType == Enum.SpellBookItemType.Spell then -- retail
         return spellID
       end
     end
