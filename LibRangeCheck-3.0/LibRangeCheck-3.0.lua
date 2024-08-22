@@ -85,14 +85,15 @@ local IsSpellBookItemInRange = _G.IsSpellInRange or function(index, spellBank, u
   end
   return nil
 end
+local spellTypes = {"SPELL", "FUTURESPELL", "PETACTION", "FLYOUT"}
 local GetSpellBookItemInfo = _G.GetSpellBookItemInfo or function(index, spellBank)
   if type(spellBank) == "string" then
     spellBank = (spellBank == "spell") and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet;
   end
   local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-  -- we are looking for main spec "Spell" here, as "FutureSpell" and passives are not working with C_Spell.IsSpellInRange
-  if info and not info.isPassive and info.itemType == Enum.SpellBookItemType.Spell and not info.isOffSpec then
-    return info.itemType, info.spellID, info
+  --map spell-type
+  if info and spellTypes[info.itemType or 0] then
+    return spellTypes[info.itemType or 0] or "None", info.spellID, info
   end
 end
 local UnitClass = UnitClass
@@ -655,10 +656,12 @@ local function findSpellIdx(spellName)
     local spell = GetSpellBookItemName(i, BOOKTYPE_SPELL)
     if spell == spellName then
       local spellType, spellID, spellInfo = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
-      if spellType == "SPELL" then -- classic/era
+      if spellInfo then -- new API output available
+        if Enum.SpellBookItemType and spellInfo.itemType == Enum.SpellBookItemType.Spell and not spellInfo.isOffSpec then -- retail - filter for only active spec "SPELL"
+          return spellID
+        end
+      elseif spellType == "SPELL" then -- classic/era
         return i
-      elseif Enum.SpellBookItemType and spellType == Enum.SpellBookItemType.Spell and (spellInfo and not spellInfo.isOffSpec or true) then -- retail
-        return spellID
       end
     end
   end
