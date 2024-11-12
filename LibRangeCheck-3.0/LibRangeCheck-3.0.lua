@@ -4019,7 +4019,6 @@ local function createCheckerList(spellList, actionList, itemList, interactList)
     local actionRanges = {}
     for action, range in pairs(actionList) do
       if not actionRanges[range] then
-        addChecker(res, range, nil, checkers_Action[action], "action:" .. action)
         addChecker(resInCombat, range, nil, checkers_Action[action], "action:" .. action)
         actionRanges[range] = true
       end
