@@ -4570,7 +4570,9 @@ function lib:CHARACTER_POINTS_CHANGED()
 end
 
 function lib:PLAYER_TALENT_UPDATE()
+  actionsInit = nil
   self:scheduleInit()
+  lastUpdate = UpdateDelay
 end
 
 function lib:SPELLS_CHANGED()
@@ -5062,9 +5064,7 @@ function lib:activate()
       frame:RegisterEvent("CVAR_UPDATE")
     end
 
-    if isRetail or isCata then
-      frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-    end
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 
     local _, playerClass = UnitClass("player")
     if playerClass == "MAGE" or playerClass == "SHAMAN" then
