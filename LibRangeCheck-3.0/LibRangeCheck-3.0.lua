@@ -1518,10 +1518,35 @@ function lib:checkItems(itemList, verbose, color)
       else
         local res = IsItemInRange(item, "target")
         if res == nil or verbose then
-          if res == nil then
-            res = "|cffed0000nil|r"
-          end
-          print(MAJOR_VERSION .. ": |c" .. color .. tostring(item) .. ": " .. tostring(name) .. "|r: " .. tostring(range) .. "yd: " .. tostring(res))
+          print(MAJOR_VERSION .. ": |c" .. color .. tostring(item) .. ": " .. tostring(name) .. "|r: " .. tostring(range) .. "yd: " .. (res == nil and "|cffed0000" or res and "|cff00ed00" or "|cffff8800") .. tostring(res))
+        end
+      end
+    end
+  end
+end
+
+function lib:checkItemsAtRange(unitType, exactRange, verbose, color)
+  unitType = unitType:lower()
+  local itemList
+  if unitType == "help" or unitType == "friend" then
+    itemList = FriendItems
+  elseif unitType == "harm" then
+    itemList = HarmItems
+  end
+  assert(itemList)
+  
+  color = color or "ffffffff"
+  for range, items in pairsByKeys(itemList) do
+    for i = 1, #items do
+      local item = items[i]
+      local name = C_Item.GetItemInfo(item)
+      if not name then
+        print(MAJOR_VERSION .. ": |c" .. color .. tostring(item) .. "|r: " .. tostring(range) .. "yd: |cffeda500not in cache|r")
+      else
+        local res = IsItemInRange(item, "target")
+        local correct = res ~= nil and (exactRange <= range) == res
+        if not correct or verbose then
+          print(MAJOR_VERSION .. ": |c" .. color .. tostring(item) .. ": " .. tostring(name) .. "|r: " .. tostring(range) .. "yd: " .. (res == nil and "|cffed0000" or correct and "|cff00ed00" or "|cffff8800") .. tostring(res))
         end
       end
     end
