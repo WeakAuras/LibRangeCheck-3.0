@@ -207,6 +207,7 @@ tinsert(ResSpells.DRUID, 20484) -- Rebirth (40 yards, level 29)
 
 -- Hunters
 tinsert(HarmSpells.HUNTER, 75) -- Auto Shot (40 yards)
+tinsert(HarmSpells.HUNTER, 217200) -- Barbed Shot (40 yards), no for Beast Mastery
 
 if not isRetail then
   tinsert(HarmSpells.HUNTER, 2764) -- Throw (30 yards, level 1)
