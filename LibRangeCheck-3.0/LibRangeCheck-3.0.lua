@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 27
+local MINOR_VERSION = 28
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -206,6 +206,7 @@ tinsert(ResSpells.DRUID, 50769) -- Revive (40 yards, level 14)
 tinsert(ResSpells.DRUID, 20484) -- Rebirth (40 yards, level 29)
 
 -- Hunters
+tinsert(HarmSpells.HUNTER, 466930) -- Black Arrow (40 yards)
 tinsert(HarmSpells.HUNTER, 75) -- Auto Shot (40 yards)
 
 if not isRetail then
