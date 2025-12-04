@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 28
+local MINOR_VERSION = 29
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -48,9 +48,12 @@ if not lib then
   return
 end
 
+local interfaceVersion = select(4, GetBuildInfo())
+
 local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
 local isEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
 local isCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
+local isMidnight = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and interfaceVersion >= 120000
 
 local InCombatLockdownRestriction = function(unit) return InCombatLockdown() and not UnitCanAttack("player", unit) end
 
@@ -4946,7 +4949,9 @@ function lib:activate()
     local frame = CreateFrame("Frame")
     self.frame = frame
 
-    frame:RegisterEvent("LEARNED_SPELL_IN_TAB")
+    if not isMidnight then
+      frame:RegisterEvent("LEARNED_SPELL_IN_TAB")
+    end
     frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     frame:RegisterEvent("SPELLS_CHANGED")
 
