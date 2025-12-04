@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 29
+local MINOR_VERSION = 30
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -4058,8 +4058,12 @@ local function getCachedRange(unit, noItems, maxCacheAge)
 
   -- compose cache key out of unit guid and noItems
   local guid = UnitGUID(unit)
-  local cacheKey = guid .. (noItems and "-1" or "-0")
-  local cacheItem = rangeCache[cacheKey]
+  local cacheKey = nil
+  -- unfortunately, caching on GUID is not possible due to secrets
+  if not isMidnight or not issecretvalue(guid) then
+    cacheKey = guid .. (noItems and "-1" or "-0")
+  end
+  local cacheItem = cacheKey and rangeCache[cacheKey] or nil
 
   local currentTime = GetTime()
 
@@ -4072,7 +4076,9 @@ local function getCachedRange(unit, noItems, maxCacheAge)
   local result = cacheItem or {}
   result.minRange, result.maxRange = getRange(unit, noItems)
   result.updateTime = currentTime
-  rangeCache[cacheKey] = result
+  if cacheKey then
+    rangeCache[cacheKey] = result
+  end
   return result.minRange, result.maxRange
 end
 
