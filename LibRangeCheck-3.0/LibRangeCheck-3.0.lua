@@ -106,6 +106,10 @@ local GetInventoryItemLink = GetInventoryItemLink
 local GetTime = GetTime
 local HandSlotId = GetInventorySlotInfo("HANDSSLOT")
 local math_floor = math.floor
+local string_format = string.format
+local string_find = string.find
+local string_match = string.match
+local string_sub = string.sub
 local UnitIsVisible = UnitIsVisible
 
 local GetSpellInfo = GetSpellInfo or function(spellID)
@@ -136,6 +140,7 @@ end
 
 -- << STATIC CONFIG
 
+local MaxActionBar = 120
 local UpdateDelay = 0.5
 local ItemRequestTimeout = 10.0
 
@@ -2098,6 +2103,12 @@ else
     -- },
   }
 end
+local FriendItemRanges = {}
+for range, items in pairs(FriendItems) do
+  for i = 1, #items do
+    FriendItemRanges[items[i]] = range
+  end
+end
 
 local HarmItems
 if isEra then
@@ -3760,6 +3771,68 @@ end
 
 -- >> END OF STATIC CONFIG
 
+
+local actionsInit
+local actionsToUpdate = {}
+local FriendActions = {}
+
+local function SetActionItem(action, item)
+  local cached = Item:CreateFromItemID(item):IsItemDataCached() and C_Item.GetItemInfo(item)
+  if cached == false then
+    cached = C_Item.GetItemInfo(item) -- make sure an event is returned when the item data is cached
+  end
+  if cached then
+    local range = FriendItemRanges[item]
+    if range then
+      FriendActions[action] = range
+    end
+  end
+end
+
+local function GetItemFromMacro(macro)
+  local name, icon, body = GetMacroInfo(macro)
+  if not body then return end
+  
+  -- find the first slash command and make sure it's either /use or /cast
+  local firstCommand = string_find(body, "^[^\n]*/") or string_find(body, "%f[^\n] */")
+  if firstCommand then
+    body = string_sub(body, firstCommand)
+    local item = string_match(body, "^ */use +item: *([0-9]+)") or string_match(body, "^ */cast +item: *([0-9]+)")
+    if item then
+      return tonumber(item)
+    end
+  end
+end
+
+local function UpdateAction(action)
+  FriendActions[action] = nil
+  local actionType, id, subType = GetActionInfo(action)
+  if actionType == "item" then
+    SetActionItem(action, id)
+  elseif actionType == "macro" then
+    local item = GetItemFromMacro(id)
+    if item then
+      SetActionItem(action, item)
+    end
+  end
+end
+
+local function UpdateActions()
+  for action in pairs(actionsToUpdate) do
+    UpdateAction(action)
+  end
+  wipe(actionsToUpdate)
+end
+
+local function UpdateAllActions()
+  for action = 1, MaxActionBar do
+    UpdateAction(action)
+  end
+  wipe(actionsToUpdate)
+  actionsInit = true
+end
+
+
 -- temporary stuff
 
 local pendingItemRequest = {}
@@ -3805,6 +3878,17 @@ local checkers_Interact = setmetatable({}, {
       end
     end
     t[index] = func
+    return func
+  end,
+})
+local checkers_Action = setmetatable({}, {
+  __index = function(t, actionSlot)
+    local func = function(unit)
+      if IsActionInRange(actionSlot, unit) then
+        return true
+      end
+    end
+    t[actionSlot] = func
     return func
   end,
 })
@@ -3922,7 +4006,7 @@ local function addChecker(t, range, minRange, checker, info)
   tinsert(t, rc)
 end
 
-local function createCheckerList(spellList, itemList, interactList)
+local function createCheckerList(spellList, actionList, itemList, interactList)
   local res, resInCombat = {}, {}
   if itemList then
     for range, items in pairs(itemList) do
@@ -3932,6 +4016,16 @@ local function createCheckerList(spellList, itemList, interactList)
           addChecker(res, range, nil, checkers_Item[item], "item:" .. item)
           break
         end
+      end
+    end
+  end
+  
+  if actionList then
+    local actionRanges = {}
+    for action, range in pairs(actionList) do
+      if not actionRanges[range] then
+        addChecker(resInCombat, range, nil, checkers_Action[action], "action:" .. action)
+        actionRanges[range] = true
       end
     end
   end
@@ -4180,19 +4274,19 @@ end
 -- friendRC and harmRC will be properly initialized later when we have all the necessary data for them
 lib.checkerCache_Spell = lib.checkerCache_Spell or {}
 lib.checkerCache_Item = lib.checkerCache_Item or {}
-lib.miscRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.miscRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.miscRCInCombat = {}
-lib.friendRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.friendRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.friendRCInCombat = {}
-lib.harmRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.harmRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.harmRCInCombat = {}
-lib.resRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.resRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.resRCInCombat = {}
-lib.petRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.petRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.petRCInCombat = {}
-lib.friendNoItemsRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.friendNoItemsRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.friendNoItemsRCInCombat = {}
-lib.harmNoItemsRC = createCheckerList(nil, nil, DefaultInteractList)
+lib.harmNoItemsRC = createCheckerList(nil, nil, nil, DefaultInteractList)
 lib.harmNoItemsRCInCombat = {}
 
 lib.failedItemRequests = {}
@@ -4245,28 +4339,33 @@ function lib:init(forced)
   local _, playerClass = UnitClass("player")
   local _, playerRace = UnitRace("player")
 
+  if actionsInit then
+    UpdateActions()
+  else
+    UpdateAllActions()
+  end
   local interactList = InteractLists[playerRace] or DefaultInteractList
   self.handSlotItem = GetInventoryItemLink("player", HandSlotId)
   local changed = false
-  if updateCheckers(self.friendRC, self.friendRCInCombat, createCheckerList(FriendSpells[playerClass], FriendItems, interactList)) then
+  if updateCheckers(self.friendRC, self.friendRCInCombat, createCheckerList(FriendSpells[playerClass], FriendActions, FriendItems, interactList)) then
     changed = true
   end
-  if updateCheckers(self.harmRC, self.harmRCInCombat, createCheckerList(HarmSpells[playerClass], HarmItems, interactList)) then
+  if updateCheckers(self.harmRC, self.harmRCInCombat, createCheckerList(HarmSpells[playerClass], nil, HarmItems, interactList)) then
     changed = true
   end
-  if updateCheckers(self.friendNoItemsRC, self.friendNoItemsRCInCombat, createCheckerList(FriendSpells[playerClass], nil, interactList)) then
+  if updateCheckers(self.friendNoItemsRC, self.friendNoItemsRCInCombat, createCheckerList(FriendSpells[playerClass], FriendActions, nil, interactList)) then
     changed = true
   end
-  if updateCheckers(self.harmNoItemsRC, self.harmNoItemsRCInCombat, createCheckerList(HarmSpells[playerClass], nil, interactList)) then
+  if updateCheckers(self.harmNoItemsRC, self.harmNoItemsRCInCombat, createCheckerList(HarmSpells[playerClass], nil, nil, interactList)) then
     changed = true
   end
-  if updateCheckers(self.miscRC, self.miscRCInCombat, createCheckerList(nil, nil, interactList)) then
+  if updateCheckers(self.miscRC, self.miscRCInCombat, createCheckerList(nil, nil, nil, interactList)) then
     changed = true
   end
-  if updateCheckers(self.resRC, self.resRCInCombat, createCheckerList(ResSpells[playerClass], nil, interactList)) then
+  if updateCheckers(self.resRC, self.resRCInCombat, createCheckerList(ResSpells[playerClass], nil, nil, interactList)) then
     changed = true
   end
-  if updateCheckers(self.petRC, self.petRCInCombat, createCheckerList(PetSpells[playerClass], nil, interactList)) then
+  if updateCheckers(self.petRC, self.petRCInCombat, createCheckerList(PetSpells[playerClass], nil, nil, interactList)) then
     changed = true
   end
   if changed and self.callbacks then
@@ -4462,7 +4561,16 @@ function lib:OnEvent(event, ...)
   end
 end
 
+function lib:ACTIONBAR_SLOT_CHANGED(event, action)
+  actionsToUpdate[action] = true
+  self:scheduleInit()
+  lastUpdate = UpdateDelay
+end
+
 function lib:LEARNED_SPELL_IN_TAB()
+  self:scheduleInit()
+end
+function lib:LEARNED_SPELL_IN_SKILL_LINE()
   self:scheduleInit()
 end
 
@@ -4471,7 +4579,9 @@ function lib:CHARACTER_POINTS_CHANGED()
 end
 
 function lib:PLAYER_TALENT_UPDATE()
+  actionsInit = nil
   self:scheduleInit()
+  lastUpdate = UpdateDelay
 end
 
 function lib:SPELLS_CHANGED()
@@ -4506,6 +4616,12 @@ function lib:GET_ITEM_INFO_RECEIVED(event, item, success)
     end
     lastUpdate = UpdateDelay
   end
+  if FriendItemRanges[item] and success then
+    -- recheck all action bars for items with cached data
+    actionsInit = nil
+    self:scheduleInit()
+    lastUpdate = UpdateDelay
+  end
 end
 
 function lib:processItemRequests(itemRequests)
@@ -4538,9 +4654,6 @@ function lib:processItemRequests(itemRequests)
         -- print("### processItemRequests: waiting: " .. tostring(item))
         itemRequestTimeoutAt[item] = GetTime() + ItemRequestTimeout
         pendingItemRequest[item] = true
-        if not self.frame:IsEventRegistered("GET_ITEM_INFO_RECEIVED") then
-          self.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-        end
         return true
       elseif GetTime() >= itemRequestTimeoutAt[item] then
         -- print("### processItemRequests: timeout: " .. tostring(item))
@@ -4559,7 +4672,7 @@ function lib:processItemRequests(itemRequests)
 end
 
 function lib:initialOnUpdate()
-  self:init()
+  self:init(next(actionsToUpdate))
   if friendItemRequests then
     if self:processItemRequests(friendItemRequests) then
       return
@@ -4581,7 +4694,6 @@ function lib:initialOnUpdate()
     cacheAllItems = nil
   end
   self.frame:Hide()
-  self.frame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
 end
 
 function lib:scheduleInit()
@@ -4936,9 +5048,9 @@ function lib:speedTest(numBatches, numIterationsPerBatch)
 
   local minRange, maxRange = self:getRange("target")
 
-  print(string.format("SpeedTest: numBatches = %d, numIterationsPerBatch = %d", numBatches, numIterationsPerBatch))
-  print(string.format("  Range: min = %d, max = %d", minRange, maxRange))
-  print(string.format("  Time per batch: min = %f, max = %f, total = %f, avg = %f", min, max, total, total / numBatches))
+  print(string_format("SpeedTest: numBatches = %d, numIterationsPerBatch = %d", numBatches, numIterationsPerBatch))
+  print(string_format("  Range: min = %d, max = %d", minRange, maxRange))
+  print(string_format("  Time per batch: min = %f, max = %f, total = %f, avg = %f", min, max, total, total / numBatches))
 end
 
 -- >> DEBUG STUFF
@@ -4951,9 +5063,12 @@ function lib:activate()
     local frame = CreateFrame("Frame")
     self.frame = frame
 
+    frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    frame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
     if not (isMidnight or isTBC) then
       frame:RegisterEvent("LEARNED_SPELL_IN_TAB")
     end
+    frame:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
     frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     frame:RegisterEvent("SPELLS_CHANGED")
 
@@ -4961,9 +5076,7 @@ function lib:activate()
       frame:RegisterEvent("CVAR_UPDATE")
     end
 
-    if isRetail or isCata then
-      frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-    end
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 
     local _, playerClass = UnitClass("player")
     if playerClass == "MAGE" or playerClass == "SHAMAN" then
