@@ -40,7 +40,7 @@ License: MIT
 -- @class file
 -- @name LibRangeCheck-3.0
 local MAJOR_VERSION = "LibRangeCheck-3.0"
-local MINOR_VERSION = 31
+local MINOR_VERSION = 32
 
 ---@class lib
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -2198,7 +2198,6 @@ if isEra then
       233226, -- Ancient Zandalarian Rope
     },
     [35] = {
-      996,    -- Ring of Righteous Flame (TEST)
       1258,   -- Bind On Use Test Item
       1399,   -- Magic Candle
       1402,   -- Brimstone
