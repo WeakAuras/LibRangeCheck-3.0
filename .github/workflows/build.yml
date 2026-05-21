@@ -7,14 +7,18 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0 # fetch all history for git describe to work
+          persist-credentials: false
 
       # - name: Install and run Luacheck
       #   uses: nebularg/actions-luacheck@v1
@@ -23,13 +27,13 @@ jobs:
       #     annotate: warning
 
       - name: Create Package
-        uses: BigWigsMods/packager@v2
+        uses: BigWigsMods/packager@5abb6e1ddbd98c818ac5ee3692613cd372619dc9 # v2
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send Status to Discord
-        uses: nebularg/actions-discord-webhook@v1
+        uses: nebularg/actions-discord-webhook@20353b77a76032fbc5b5a7a7e5a689d199b80f1e # v1
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL }}
           status: ${{ job.status }}
