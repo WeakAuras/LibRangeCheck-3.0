@@ -3978,6 +3978,29 @@ local function createCheckerList(spellList, itemList, interactList)
           if checker then
             addChecker(res, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
             addChecker(resInCombat, range, minRange, checker, "spell:" .. sid .. ":" .. tostring(name))
+            -- A spell with a minimum range (e.g. Hunter Auto Shot, 8-35 yd on Era/Forever) also marks that minimum:
+            -- inside it the spell answers out of range while the min-range fallback still reaches. With no answer
+            -- (e.g. no ranged weapon) the check defers to the next-larger checker, so the list stays monotone.
+            local reach = findMinRangeChecker(minRange, range, spellList, interactList)
+            if reach then
+              local function within(list)
+                return function(unit)
+                  local r = IsSpellBookItemInRange(spellIdx, BOOKTYPE_SPELL, unit)
+                  if r == 0 then
+                    return reach(unit)
+                  elseif r == 1 then
+                    return false
+                  end
+                  for i = #list, 1, -1 do
+                    if list[i].range > minRange then
+                      return list[i].checker(unit)
+                    end
+                  end
+                end
+              end
+              addChecker(res, minRange, nil, within(res), "spell:" .. sid .. ":" .. tostring(name) .. ":min")
+              addChecker(resInCombat, minRange, nil, within(resInCombat), "spell:" .. sid .. ":" .. tostring(name) .. ":min")
+            end
           end
         else
           addChecker(res, range, minRange, checkers_Spell[spellIdx], "spell:" .. sid .. ":" .. tostring(name))
